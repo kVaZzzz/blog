@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h3>Привет {{ profile.username }}</h3>
+    {% if profile.avatar %}
+        <img style="max-height: 50px;" src="{{ profile.avatar.url }}" alt="Аватар">
+    {% else %}
+        <img style="max-height: 50px;" src="/files/photo/default.jpg" alt="Аватар дефолтный">
+    {% endif %}
+    <p>Ваше имя: {{ profile.name }}</p>
+    <p>Ваша фамилия: {{ profile.surname }}</p>
+    <p>Ваш логин: {{ profile.username }}</p>
+    <a href="{% url 'update' profile.pk %}">Редактировать профиль</a>
+    <button type="submit" id="1" onclick="Btn()">Удалить профиль</button>
+    <form action="{% url 'delete' profile.id %}" method="POST" id="2" style="display: none">
+        {% csrf_token %}
+        <button type="submit">Подтвердить удаление</button>
+    </form>
+
+    <br>
+
+    <h3>Создать пост</h3>
+    <form action="{% url 'post_create' profile.id %}" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ post_form.as_p }}
+        <button type="submit">Создать</button>
+    </form>
+
+    <br>
+
+    {% for post in posts %}
+        <div>
+
+            <h4>{{ post.name }}</h4>
+            <p>{{ post.content }}</p>
+            {% if post.photo %}
+                <img src="{{ post.photo.url }}" alt="Фото поста" style="max-height: 100px;">
+            {% endif %}
+
+            <h5>Комментарии:</h5>
+            <form action="{% url 'comment_create' profile.id post.id %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="post.id" value="{{ post.id }}">
+                {{ comment_form.as_p }}
+                <button type="submit" id="{{ post.id }}">Комментировать</button>
+            </form>
+
+
+                    <ul>
+                        {% for comment in post.comment_set.all %}
+
+                            <div>
+                                <li>{{ comment.content }}
+                                    {% if comment.photo %}
+                                        <img src="{{ comment.photo.url }}" alt="Фото комментария" style="max-height: 100px;">
+                                    {% endif %}
+                                </li>
+                            </div>
+
+
+                            <br>
+
+                                <ul>
+                                    {% for comment_commented in comment.commentcommented_set.all %}
+                                        <div>
+                                            <li>{{ comment_commented.content }}
+                                                {% if comment_commented.photo %}
+                                                    <img src="{{ comment_commented.photo.url }}" alt="Фото комментария" style="max-height: 100px;">
+                                                {% endif %}
+                                            </li>
+                                        </div>
+                                    {% endfor %}
+                                </ul>
+
+
+                            <div>
+                                <h6>Ответить на комментарий:</h6>
+                                <form action="{% url 'comment_commented' comment.id profile.id %}" method="POST" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="comment.id" value="{{ comment.id }}">
+                                    {{ comment_comment_form.as_p }}
+                                    <button type="submit" id="{{ comment.id }}">Комментировать</button>
+                                </form>
+                            </div>
+
+                        {% endfor %}
+                    </ul>
+
+        </div>
+
+        <br>
+    {% endfor %}
+
+    <script>
+        function Btn() {
+            document.getElementById('1').style.display = 'none';
+            document.getElementById('2').style.display = 'block';
+        }
+    </script>
+{% endblock %}

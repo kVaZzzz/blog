@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title%}Авторизация{% endblock%}
+
+{% block content %}
+{% for post in posts %}
+        <div>
+
+            <h4>{{ post.name }}</h4>
+            <p>{{ post.content }}</p>
+            {% if post.photo %}
+                <img src="{{ post.photo.url }}" alt="Фото поста" style="max-height: 100px;">
+            {% endif %}
+
+            <h5>Комментарии:</h5>
+            <form action="{% url 'comment_create' user.id post.id %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="post.id" value="{{ post.id }}">
+                {{ comment_form.as_p }}
+                <button type="submit" id="{{ post.id }}">Комментировать</button>
+            </form>
+
+
+                    <ul>
+                        {% for comment in post.comment_set.all %}
+
+                            <div>
+                                <li>{{ comment.content }}
+                                    {% if comment.photo %}
+                                        <img src="{{ comment.photo.url }}" alt="Фото комментария" style="max-height: 100px;">
+                                    {% endif %}
+                                    {% if comment.user == request.user %}
+                                        <a href="{% url 'comment_update' comment.id %}">Редактировать комментарий</a>
+                                        <button type="submit" id="comment1_{{ comment.id }}" onclick="Btn('{{ comment.id }}')">Удалить комментарий</button>
+                                        <form action="{% url 'comment_delete' comment.id %}" method="POST" id="comment2_{{ comment.id }}" style="display: none">
+                                            {% csrf_token %}
+                                            <button type="submit">Подтвердить удаление</button>
+                                        </form>
+                                    {% endif %}
+                                </li>
+                            </div>
+
+
+                            <br>
+
+                                <ul>
+                                    {% for comment_commented in comment.commentcommented_set.all %}
+                                        <div>
+                                            <li>{{ comment_commented.content }}
+                                                {% if comment_commented.photo %}
+                                                    <img src="{{ comment_commented.photo.url }}" alt="Фото комментария" style="max-height: 100px;">
+                                                {% endif %}
+                                                {% if comment_commented.user == request.user %}
+                                                    <a href="{% url 'comment_commented_update' comment_commented.id %}">Редактировать комментарий</a>
+
+                                                    <button type="submit" id="commented1_{{ comment_commented.id }}" onclick="Btn1('{{ comment_commented.id }}')">Удалить комментарий</button>
+                                                    <form action="{% url 'delete_comment_commented' comment_commented.id %}" method="POST" id="commented2_{{ comment_commented.id }}" style="display: none">
+                                                        {% csrf_token %}
+                                                        <button type="submit">Подтвердить удаление</button>
+                                                    </form>
+                                                {% endif %}
+                                            </li>
+                                        </div>
+                                    {% endfor %}
+                                </ul>
+
+
+                            <div>
+                                <h6>Ответить на комментарий:</h6>
+                                <form action="{% url 'comment_commented' comment.id user.id %}" method="POST" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="comment.id" value="{{ comment.id }}">
+                                    {{ comment_comment_form.as_p }}
+                                    <button type="submit" id="{{ comment.id }}">Комментировать</button>
+                                </form>
+                            </div>
+
+                        {% endfor %}
+                    </ul>
+
+        </div>
+
+        <br>
+    {% endfor %}
+
+
+<div>
+    <span>
+        {% if posts.has_previous %}
+            <a href="?page=1">&laquo; первая</a>
+            <a href="?page={{ posts.previous_page_number }}">предыдущая</a>
+        {% endif %}
+
+        <span class="current">
+            Страница {{ posts.number }} из {{ posts.paginator.num_pages }}.
+        </span>
+
+        {% if posts.has_next %}
+            <a href="?page={{ posts.next_page_number }}">следующая</a>
+            <a href="?page={{ posts.paginator.num_pages }}">последняя &raquo;</a>
+        {% endif %}
+    </span>
+</div>
+        {% for i in commented %}
+            <p>{{ i.content }}</p>
+            {% if i.photo %}
+                <img src="{{ i.photo.url }}" alt="Фото комментария" style="max-height: 100px;">
+            {% endif %}
+        {% endfor %}
+
+    <script>
+        function Btn(commentId) {
+            document.getElementById('comment1_' + commentId).style.display = 'none';
+            document.getElementById('comment2_' + commentId).style.display = 'block';
+        }
+
+        function Btn1(commentedId) {
+            document.getElementById('commented1_' + commentedId).style.display = 'none';
+            document.getElementById('commented2_' + commentedId).style.display = 'block';
+        }
+    </script>
+
+{% endblock %}
